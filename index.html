@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sonder / В дорогу 🎧</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --accent: #000000;
+            --radius: 20px;
+            --border-color: rgba(0, 0, 0, 0.06);
+            --btn-no-bg: #e8e8ed;
+            --overlay-bg: rgba(245, 245, 247, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Контейнер для парящих эмодзи природы */
+        .nature-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            bottom: -50px;
+            font-size: 20px;
+            opacity: 0;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.05));
+            animation: floatUp 12s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-110vh) translateX(50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(25px);
+            transition: all 1s cubic-bezier(0.15, 0.85, 0.3, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        section {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        .section-hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .sonder-logo {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .hero-title {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.25;
+            margin-bottom: 16px;
+            background: linear-gradient(180deg, var(--text-main) 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .audio-wave {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 12px;
+            margin-left: 6px;
+        }
+        .audio-bar {
+            width: 2px;
+            background-color: var(--text-muted);
+            animation: soundWave 0.6s infinite alternate ease-in-out;
+        }
+        .audio-bar:nth-child(2) { animation-delay: 0.15s; height: 8px; }
+        .audio-bar:nth-child(3) { animation-delay: 0.3s; height: 10px; }
+        @keyframes soundWave {
+            0% { height: 3px; }
+            100% { height: 12px; }
+        }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            animation: bounce 2s infinite;
+        }
+
+        .section-message {
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+        }
+
+        .photo-container {
+            width: 100%;
+            max-width: 300px;
+            height: 360px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 32px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+            background: linear-gradient(135deg, #e2e2e7 0%, #d1d1d6 100%); /* Fallback бэк */
+            perspective: 1000px;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease-out;
+        }
+
+        .message-card {
+            max-width: 320px;
+            text-align: left;
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+
+        .section-quiz {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .quiz-title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .quiz-space {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        #btn-yes {
+            background: var(--accent);
+            color: var(--bg-color);
+            z-index: 10;
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #btn-no {
+            position: absolute;
+            background: var(--btn-no-bg);
+            color: #ff3b30;
+            border: 1px solid rgba(255, 59, 48, 0.1);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 5;
+        }
+
+        /* Экран финала с постером Брента */
+        .matrix-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            background-image: url('./poster.jpg');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .matrix-bg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--overlay-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-6px); }
+            60% { transform: translateY(-3px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nature-particles" id="particle-container"></div>
+
+    <section class="section-hero">
+        <div class="sonder-logo">Sonder</div>
+        <h1 class="hero-title">Хорошей дороги,<br>Кристина</h1>
+        <p style="color: var(--text-muted); font-size: 14px; display: inline-flex; align-items: center;">
+            Включай любимый плейлист в пути 
+            <span class="audio-wave">
+                <span class="audio-bar"></span>
+                <span class="audio-bar"></span>
+                <span class="audio-bar"></span>
+            </span>
+        </p>
+        <div class="scroll-hint">Листай ниже</div>
+    </section>
+
+    <section class="section-message">
+        <div class="photo-container reveal" id="parallax-box">
+            <img src="./brent.jpg" id="brent-img" alt="Brent Faiyaz" onerror="this.style.display='none';">
+        </div>
+        <div class="message-card reveal">
+            <p class="message-text">Спокойно собирайся, ни о чём лишнем не думай и отлично проведи это время.</p>
+            <p class="message-text" style="color: var(--text-muted);">Набирайся сил, возвращайся в свой привычный ритм, а я остаюсь тут и буду тебя ждать.</p>
+        </div>
+    </section>
+
+    <section class="section-quiz">
+        <div class="quiz-title reveal">Готова будешь выбраться на чилле, как вернешься в систему?</div>
+        
+        <div class="quiz-space reveal">
+            <button id="btn-yes" class="action-btn" onclick="triggerMagic()">Да</button>
+            <button id="btn-no" class="action-btn" onclick="escapeAndGrow(event)">Нет</button>
+        </div>
+    </section>
+
+    <div id="magic-screen" class="matrix-bg">
+        <div class="success-title">План утвержден 🤝</div>
+        <p style="color: var(--text-muted); font-size: 15px; text-align: center;">С меня кофе, с тебя истории.</p>
+    </div>
+
+    <script>
+        // Генерация парящих частиц природы
+        const emojis = ['🍃', '🌲', '🌊', '⛰️', '✨', '🌱'];
+        const container = document.getElementById('particle-container');
+        
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            particle.style.left = Math.random() * 100 + 'vw';
+            
+            // Рандомизация размеров и скоростей
+            const duration = Math.random() * 6 + 8; // от 8 до 14 секунд
+            const size = Math.random() * 12 + 16; // от 16px до 28px
+            const delay = Math.random() * 5;
+            
+            particle.style.animationDuration = `${duration}s`;
+            particle.style.fontSize = `${size}px`;
+            particle.style.animationDelay = `${delay}s`;
+            
+            container.appendChild(particle);
+            
+            // Удаление старых элементов из DOM
+            setTimeout(() => {
+                particle.remove();
+            }, (duration + delay) * 1000);
+        }
+
+        // Спавним стартовый пак частиц
+        for(let i = 0; i < 15; i++) {
+            createParticle();
+        }
+        // Доспавниваем в процессе интервалами
+        setInterval(createParticle, 900);
+
+        // Scroll-анимация появления контента
+        const reveals = document.querySelectorAll('.reveal');
+        const brentImg = document.getElementById('brent-img');
+        const parallaxBox = document.getElementById('parallax-box');
+
+        function handleScroll() {
+            const triggerBottom = window.innerHeight / 5 * 4;
+            
+            reveals.forEach(reveal => {
+                if (reveal.getBoundingClientRect().top < triggerBottom) {
+                    reveal.classList.add('visible');
+                }
+            });
+
+            // Мягкий параллакс для фото Брента
+            if (parallaxBox && brentImg) {
+                const boxTop = parallaxBox.getBoundingClientRect().top;
+                const speed = 0.04;
+                if (boxTop < window.innerHeight && boxTop > -360) {
+                    brentImg.style.transform = `scale(1.06) translateY(${(boxTop - window.innerHeight/2) * speed}px)`;
+                }
+            }
+        }
+        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('DOMContentLoaded', handleScroll);
+
+        // Интерактив с кнопками (iOS-совместимый)
+        let noClicksCount = 0;
+        let yesScale = 1;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const btnNo = document.getElementById('btn-no');
+            btnNo.style.left = '65%';
+            btnNo.style.top = '42%';
+        });
+
+        function escapeAndGrow(event) {
+            event.preventDefault();
+            noClicksCount++;
+
+            const btnNo = document.getElementById('btn-no');
+            const btnYes = document.getElementById('btn-yes');
+
+            if (noClicksCount >= 5) {
+                btnNo.style.display = 'none';
+                btnYes.style.transform = `scale(2.8)`;
+                return;
+            }
+
+            // Случайный телепорт внутри контейнера quiz-space
+            const randomX = Math.floor(Math.random() * 60) + 5; 
+            const randomY = Math.floor(Math.random() * 65) + 10; 
+            
+            btnNo.style.left = `${randomX}%`;
+            btnNo.style.top = `${randomY}%`;
+
+            // Увеличение кнопки "Да"
+            yesScale += 0.35;
+            btnYes.style.transform = `scale(${yesScale})`;
+        }
+
+        // Финальное проявление экрана без редиректа
+        function triggerMagic() {
+            const magicScreen = document.getElementById('magic-screen');
+            magicScreen.style.display = 'flex';
+            magicScreen.style.opacity = '0';
+            
+            // Плавное проявление
+            let opacity = 0;
+            const fadeIn = setInterval(() => {
+                if (opacity >= 1) {
+                    clearInterval(fadeIn);
+                } else {
+                    opacity += 0.1;
+                    magicScreen.style.opacity = opacity;
+                }
+            }, 30);
+        }
+    </script>
+</body>
+</html>
