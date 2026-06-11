@@ -75,7 +75,7 @@
         .reveal {
             opacity: 0;
             transform: translateY(25px);
-            transition: all 1s cubic-bezier(0.15, 0.85, 0.3, 1);
+            transition: all 0.8s cubic-bezier(0.15, 0.85, 0.3, 1);
         }
 
         .reveal.visible {
@@ -166,7 +166,7 @@
             margin-bottom: 32px;
             border: 1px solid var(--border-color);
             box-shadow: 0 20px 40px rgba(0,0,0,0.06);
-            background: linear-gradient(135deg, #e2e2e7 0%, #d1d1d6 100%); /* Fallback бэк */
+            background: linear-gradient(135deg, #e2e2e7 0%, #d1d1d6 100%);
             perspective: 1000px;
         }
 
@@ -209,6 +209,7 @@
             max-width: 300px;
         }
 
+        /* ПОПРАВЛЕНО: Теперь тут flex, кнопки стоят ровно по центру рядышком */
         .quiz-space {
             position: relative;
             width: 100%;
@@ -217,6 +218,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 16px; 
         }
 
         .action-btn {
@@ -237,12 +239,12 @@
             transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
+        /* ПОПРАВЛЕНО: Убран дефолтный position: absolute, добавлен плавный transition для левитации */
         #btn-no {
-            position: absolute;
             background: var(--btn-no-bg);
             color: #ff3b30;
             border: 1px solid rgba(255, 59, 48, 0.1);
-            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: transform 0.2s ease, left 0.2s ease, top 0.2s ease;
             z-index: 5;
         }
 
@@ -261,6 +263,8 @@
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
 
         .matrix-bg::before {
@@ -321,13 +325,13 @@
         
         <div class="quiz-space reveal">
             <button id="btn-yes" class="action-btn" onclick="triggerMagic()">Да</button>
-            <button id="btn-no" class="action-btn" onclick="escapeAndGrow(event)">Нет</button>
+            <button id="btn-no" class="action-btn" onclick="escapeAndGrow(event)" ontouchstart="escapeAndGrow(event)">Нет</button>
         </div>
     </section>
 
     <div id="magic-screen" class="matrix-bg">
-        <div class="success-title">План утвержден 🤝</div>
-        <p style="color: var(--text-muted); font-size: 15px; text-align: center;">С меня кофе, с тебя истории.</p>
+        <div class="success-title">Got it</div>
+        <p style="color: var(--text-muted); font-size: 15px; text-align: center;">Отдыхай <3</p>
     </div>
 
     <script>
@@ -341,9 +345,8 @@
             particle.innerText = emojis[Math.floor(Math.random() * emojis.length)];
             particle.style.left = Math.random() * 100 + 'vw';
             
-            // Рандомизация размеров и скоростей
-            const duration = Math.random() * 6 + 8; // от 8 до 14 секунд
-            const size = Math.random() * 12 + 16; // от 16px до 28px
+            const duration = Math.random() * 6 + 8; 
+            const size = Math.random() * 12 + 16; 
             const delay = Math.random() * 5;
             
             particle.style.animationDuration = `${duration}s`;
@@ -352,34 +355,36 @@
             
             container.appendChild(particle);
             
-            // Удаление старых элементов из DOM
             setTimeout(() => {
                 particle.remove();
             }, (duration + delay) * 1000);
         }
 
-        // Спавним стартовый пак частиц
-        for(let i = 0; i < 15; i++) {
-            createParticle();
-        }
-        // Доспавниваем в процессе интервалами
+        for(let i = 0; i < 15; i++) { createParticle(); }
         setInterval(createParticle, 900);
 
-        // Scroll-анимация появления контента
+        // ПОПРАВЛЕНО: Оптимальное и быстрое появление контента через IntersectionObserver
         const reveals = document.querySelectorAll('.reveal');
         const brentImg = document.getElementById('brent-img');
         const parallaxBox = document.getElementById('parallax-box');
 
-        function handleScroll() {
-            const triggerBottom = window.innerHeight / 5 * 4;
-            
-            reveals.forEach(reveal => {
-                if (reveal.getBoundingClientRect().top < triggerBottom) {
-                    reveal.classList.add('visible');
+        const observerOptions = {
+            root: null,
+            threshold: 0.15 // Элемент покажется, как только покажется хотя бы на 15%
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
                 }
             });
+        }, observerOptions);
 
-            // Мягкий параллакс для фото Брента
+        reveals.forEach(reveal => observer.observe(reveal));
+
+        // Параллакс оставляем на скролл, но разгружаем его (только для картинки)
+        window.addEventListener('scroll', () => {
             if (parallaxBox && brentImg) {
                 const boxTop = parallaxBox.getBoundingClientRect().top;
                 const speed = 0.04;
@@ -387,22 +392,14 @@
                     brentImg.style.transform = `scale(1.06) translateY(${(boxTop - window.innerHeight/2) * speed}px)`;
                 }
             }
-        }
-        window.addEventListener('scroll', handleScroll);
-        window.addEventListener('DOMContentLoaded', handleScroll);
+        });
 
-        // Интерактив с кнопками (iOS-совместимый)
+        // Интерактив с кнопками
         let noClicksCount = 0;
         let yesScale = 1;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const btnNo = document.getElementById('btn-no');
-            btnNo.style.left = '65%';
-            btnNo.style.top = '42%';
-        });
-
         function escapeAndGrow(event) {
-            event.preventDefault();
+            event.preventDefault(); // Предотвращаем двойной триггер click/touchstart
             noClicksCount++;
 
             const btnNo = document.getElementById('btn-no');
@@ -412,6 +409,11 @@
                 btnNo.style.display = 'none';
                 btnYes.style.transform = `scale(2.8)`;
                 return;
+            }
+
+            // ПОПРАВЛЕНО: Включаем абсолютное позиционирование только при первой попытке нажать "Нет"
+            if (btnNo.style.position !== 'absolute') {
+                btnNo.style.position = 'absolute';
             }
 
             // Случайный телепорт внутри контейнера quiz-space
@@ -426,22 +428,14 @@
             btnYes.style.transform = `scale(${yesScale})`;
         }
 
-        // Финальное проявление экрана без редиректа
+        // Финальный экран
         function triggerMagic() {
             const magicScreen = document.getElementById('magic-screen');
             magicScreen.style.display = 'flex';
-            magicScreen.style.opacity = '0';
-            
-            // Плавное проявление
-            let opacity = 0;
-            const fadeIn = setInterval(() => {
-                if (opacity >= 1) {
-                    clearInterval(fadeIn);
-                } else {
-                    opacity += 0.1;
-                    magicScreen.style.opacity = opacity;
-                }
-            }, 30);
+            // Используем нативный CSS transition вместоsetInterval
+            setTimeout(() => {
+                magicScreen.style.opacity = '1';
+            }, 10);
         }
     </script>
 </body>
